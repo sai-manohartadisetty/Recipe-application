@@ -1,0 +1,790 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const RecipeBookApp());
+}
+
+// ------------------------------------------------------------
+// RECIPE MODEL
+// ------------------------------------------------------------
+class Recipe {
+  final String id;
+  final String name;
+  final String category;
+  final String description;
+  final String imageUrl;
+  final String duration;
+  final String difficulty;
+  final int servings;
+  final List<String> ingredients;
+  final List<String> steps;
+  bool isFavorite;
+
+  Recipe({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.description,
+    required this.imageUrl,
+    required this.duration,
+    required this.difficulty,
+    required this.servings,
+    required this.ingredients,
+    required this.steps,
+    this.isFavorite = false,
+  });
+}
+
+// ------------------------------------------------------------
+// APP DATA / SHARED STATE
+// Uses ChangeNotifier and AnimatedBuilder, so no extra package
+// is needed to run this single-file example in DartPad.
+// ------------------------------------------------------------
+class RecipeStore extends ChangeNotifier {
+  final List<Recipe> recipes = [
+    Recipe(
+      id: '1',
+      name: 'Vegetable Fried Rice',
+      category: 'Lunch',
+      description: 'A quick and colourful rice dish with fresh vegetables.',
+      imageUrl: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=900',
+      duration: '25 min',
+      difficulty: 'Easy',
+      servings: 2,
+      ingredients: ['2 cups cooked rice', '1 carrot, chopped', '1/2 cup beans',
+        '1/2 cup peas', '2 tbsp oil', '1 tbsp soy sauce', 'Salt and pepper'],
+      steps: ['Prepare and chop all vegetables.',
+        'Heat oil in a pan and add the vegetables.',
+        'Cook until the vegetables are tender.',
+        'Add cooked rice, soy sauce, salt and pepper.',
+        'Mix well and serve warm.'],
+    ),
+    Recipe(
+      id: '2',
+      name: 'Masala Dosa',
+      category: 'Breakfast',
+      description: 'Crispy dosa filled with a delicious potato masala.',
+      imageUrl: 'https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=900',
+      duration: '35 min',
+      difficulty: 'Medium',
+      servings: 3,
+      ingredients: ['2 cups dosa batter', '3 potatoes', '1 onion',
+        '1/2 tsp mustard seeds', 'Curry leaves', 'Turmeric', 'Oil and salt'],
+      steps: ['Boil and mash the potatoes.',
+        'Prepare a seasoning with oil, mustard seeds and curry leaves.',
+        'Add onion, turmeric and potatoes; mix well.',
+        'Spread dosa batter on a hot pan.',
+        'Cook until crisp, add potato masala and fold.'],
+    ),
+    Recipe(
+      id: '3',
+      name: 'Paneer Butter Masala',
+      category: 'Dinner',
+      description: 'Soft paneer cubes in a creamy tomato-based gravy.',
+      imageUrl: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=900',
+      duration: '40 min',
+      difficulty: 'Medium',
+      servings: 4,
+      ingredients: ['200 g paneer', '3 tomatoes', '1 onion',
+        '1 tbsp butter', '1/4 cup cream', 'Ginger-garlic paste', 'Spices'],
+      steps: ['Chop tomatoes and onion.',
+        'Cook them with spices until soft, then blend into a smooth gravy.',
+        'Heat butter and add the gravy.',
+        'Add paneer cubes and simmer for 5 minutes.',
+        'Stir in cream and serve.'],
+    ),
+    Recipe(
+      id: '4',
+      name: 'Fresh Fruit Salad',
+      category: 'Dessert',
+      description: 'A refreshing bowl of seasonal fruits.',
+      imageUrl: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=900',
+      duration: '10 min',
+      difficulty: 'Easy',
+      servings: 2,
+      ingredients: ['1 apple', '1 banana', '1 orange', '1 cup grapes',
+        '1/2 cup pomegranate', 'A little lemon juice'],
+      steps: ['Wash all fruits properly.',
+        'Peel and cut fruits into bite-sized pieces.',
+        'Place them in a bowl.',
+        'Add a little lemon juice and mix gently.',
+        'Serve fresh.'],
+    ),
+    Recipe(
+      id: '5',
+      name: 'Tomato Soup',
+      category: 'Snacks',
+      description: 'A warm and comforting homemade tomato soup.',
+      imageUrl: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=900',
+      duration: '20 min',
+      difficulty: 'Easy',
+      servings: 2,
+      ingredients: ['4 ripe tomatoes', '1 small onion', '2 garlic cloves',
+        '1 tsp butter', '1 cup water', 'Salt and pepper'],
+      steps: ['Wash and roughly chop the tomatoes.',
+        'Cook tomatoes, onion and garlic until soft.',
+        'Cool slightly and blend until smooth.',
+        'Strain if desired and heat again with water.',
+        'Season and serve warm.'],
+    ),
+  ];
+
+  void toggleFavorite(Recipe recipe) {
+    recipe.isFavorite = !recipe.isFavorite;
+    notifyListeners();
+  }
+
+  void addRecipe(Recipe recipe) {
+    recipes.insert(0, recipe);
+    notifyListeners();
+  }
+
+  List<Recipe> get favorites =>
+      recipes.where((recipe) => recipe.isFavorite).toList();
+}
+
+// ------------------------------------------------------------
+// APP
+// ------------------------------------------------------------
+class RecipeBookApp extends StatefulWidget {
+  const RecipeBookApp({super.key});
+
+  @override
+  State<RecipeBookApp> createState() => _RecipeBookAppState();
+}
+
+class _RecipeBookAppState extends State<RecipeBookApp> {
+  final RecipeStore store = RecipeStore();
+
+  @override
+  void dispose() {
+    store.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: store,
+      builder: (context, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Recipe Book',
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF2E7D5B),
+              brightness: Brightness.light,
+            ),
+            scaffoldBackgroundColor: const Color(0xFFF7F8F5),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFFF7F8F5),
+              foregroundColor: Color(0xFF183D2D),
+              elevation: 0,
+              centerTitle: false,
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFFE2E8E3)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: Color(0xFF2E7D5B), width: 1.5),
+              ),
+            ),
+          ),
+          home: HomeScreen(store: store),
+        );
+      },
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// HOME / RECIPE LIST SCREEN
+// ------------------------------------------------------------
+class HomeScreen extends StatefulWidget {
+  final RecipeStore store;
+  const HomeScreen({super.key, required this.store});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String selectedCategory = 'All';
+  String searchText = '';
+
+  final List<String> categories =
+      ['All', 'Breakfast', 'Lunch', 'Dinner', 'Snacks', 'Dessert'];
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleRecipes = widget.store.recipes.where((recipe) {
+      final matchesCategory =
+          selectedCategory == 'All' || recipe.category == selectedCategory;
+      final matchesSearch =
+          recipe.name.toLowerCase().contains(searchText.toLowerCase()) ||
+          recipe.category.toLowerCase().contains(searchText.toLowerCase());
+      return matchesCategory && matchesSearch;
+    }).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Row(
+          children: [
+            Icon(Icons.restaurant_menu, color: Color(0xFF2E7D5B)),
+            SizedBox(width: 9),
+            Text('Recipe Book', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Favourites',
+            icon: const Icon(Icons.favorite, color: Colors.redAccent),
+            onPressed: () => Navigator.push(context,
+              MaterialPageRoute(builder: (_) => FavoritesScreen(store: widget.store))),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF245B43), Color(0xFF4C9871)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Cook something delicious!',
+                  style: TextStyle(color: Colors.white, fontSize: 23,
+                    fontWeight: FontWeight.bold)),
+                SizedBox(height: 8),
+                Text('Find your next favourite meal.',
+                  style: TextStyle(color: Colors.white70, fontSize: 15)),
+                SizedBox(height: 14),
+                Icon(Icons.ramen_dining, color: Colors.white, size: 42),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            decoration: const InputDecoration(
+              hintText: 'Search recipes...',
+              prefixIcon: Icon(Icons.search),
+            ),
+            onChanged: (value) => setState(() => searchText = value),
+          ),
+          const SizedBox(height: 18),
+          const Text('Categories',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 42,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: categories.length,
+              separatorBuilder: (, _) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final category = categories[index];
+                final selected = selectedCategory == category;
+                return ChoiceChip(
+                  label: Text(category),
+                  selected: selected,
+                  onSelected: (_) => setState(() => selectedCategory = category),
+                  selectedColor: const Color(0xFF2E7D5B),
+                  labelStyle: TextStyle(
+                    color: selected ? Colors.white : const Color(0xFF315744),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  backgroundColor: Colors.white,
+                  side: BorderSide.none,
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Popular recipes',
+                style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+              Text('${visibleRecipes.length} recipes',
+                style: const TextStyle(color: Colors.grey)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (visibleRecipes.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(35),
+              child: Column(
+                children: [
+                  Icon(Icons.search_off, size: 48, color: Colors.grey),
+                  SizedBox(height: 10),
+                  Text('No recipes found. Try another search.',
+                    textAlign: TextAlign.center),
+                ],
+              ),
+            )
+          else
+            ...visibleRecipes.map((recipe) => RecipeCard(
+              recipe: recipe,
+              store: widget.store,
+            )),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFF2E7D5B),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Recipe'),
+        onPressed: () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) => AddRecipeScreen(store: widget.store))),
+      ),
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// RECIPE CARD
+// ------------------------------------------------------------
+class RecipeCard extends StatelessWidget {
+  final Recipe recipe;
+  final RecipeStore store;
+  const RecipeCard({super.key, required this.recipe, required this.store});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Colors.white,
+      elevation: 1,
+      margin: const EdgeInsets.only(bottom: 14),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: InkWell(
+        onTap: () => Navigator.push(context,
+          MaterialPageRoute(builder: (_) =>
+            RecipeDetailScreen(recipe: recipe, store: store))),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                Image.network(
+                  recipe.imageUrl,
+                  height: 165,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (, _, _) => Container(
+                    height: 165,
+                    color: const Color(0xFFE5EFE8),
+                    child: const Center(
+                      child: Icon(Icons.restaurant, size: 55, color: Color(0xFF2E7D5B)),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: Colors.redAccent,
+                      ),
+                      onPressed: () => store.toggleFavorite(recipe),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(15, 13, 15, 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(recipe.name,
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 5),
+                  Text(recipe.description,
+                    maxLines: 2, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.black54)),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(Icons.schedule, size: 16, color: Color(0xFF2E7D5B)),
+                      const SizedBox(width: 5),
+                      Text(recipe.duration),
+                      const SizedBox(width: 18),
+                      const Icon(Icons.restaurant, size: 16, color: Color(0xFF2E7D5B)),
+                      const SizedBox(width: 5),
+                      Text(recipe.category),
+                      const Spacer(),
+                      const Icon(Icons.arrow_forward_ios, size: 15),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// RECIPE DETAIL SCREEN
+// ------------------------------------------------------------
+class RecipeDetailScreen extends StatelessWidget {
+  final Recipe recipe;
+  final RecipeStore store;
+  const RecipeDetailScreen({super.key, required this.recipe, required this.store});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Recipe Details'),
+        actions: [
+          IconButton(
+            icon: Icon(recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: Colors.redAccent),
+            onPressed: () => store.toggleFavorite(recipe),
+          ),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 25),
+        children: [
+          Image.network(
+            recipe.imageUrl,
+            height: 230,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (, _, _) => Container(
+              height: 230, color: const Color(0xFFE5EFE8),
+              child: const Icon(Icons.restaurant, size: 70, color: Color(0xFF2E7D5B)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(recipe.name,
+                  style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text(recipe.description,
+                  style: const TextStyle(fontSize: 15, color: Colors.black54)),
+                const SizedBox(height: 18),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    InfoTile(icon: Icons.schedule, title: recipe.duration, label: 'Time'),
+                    InfoTile(icon: Icons.signal_cellular_alt,
+                      title: recipe.difficulty, label: 'Difficulty'),
+                    InfoTile(icon: Icons.people, title: '${recipe.servings}',
+                      label: 'Servings'),
+                  ],
+                ),
+                const SizedBox(height: 25),
+                const Text('Ingredients',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+                ...recipe.ingredients.map((item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.check_circle, color: Color(0xFF2E7D5B), size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(item, style: const TextStyle(fontSize: 15))),
+                    ],
+                  ),
+                )),
+                const SizedBox(height: 22),
+                const Text('Preparation steps',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                ...List.generate(recipe.steps.length, (index) => Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 15,
+                        backgroundColor: const Color(0xFF2E7D5B),
+                        child: Text('${index + 1}',
+                          style: const TextStyle(color: Colors.white)),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(recipe.steps[index],
+                        style: const TextStyle(fontSize: 15, height: 1.4))),
+                    ],
+                  ),
+                )),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class InfoTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String label;
+  const InfoTile({super.key, required this.icon, required this.title, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: const Color(0xFF2E7D5B), size: 25),
+        const SizedBox(height: 5),
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+      ],
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// ADD RECIPE SCREEN WITH VALIDATION
+// ------------------------------------------------------------
+class AddRecipeScreen extends StatefulWidget {
+  final RecipeStore store;
+  const AddRecipeScreen({super.key, required this.store});
+
+  @override
+  State<AddRecipeScreen> createState() => _AddRecipeScreenState();
+}
+
+class _AddRecipeScreenState extends State<AddRecipeScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final ingredientsController = TextEditingController();
+  final stepsController = TextEditingController();
+  final durationController = TextEditingController();
+  final servingsController = TextEditingController();
+  String category = 'Breakfast';
+  String difficulty = 'Easy';
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    descriptionController.dispose();
+    ingredientsController.dispose();
+    stepsController.dispose();
+    durationController.dispose();
+    servingsController.dispose();
+    super.dispose();
+  }
+
+  String? requiredText(String? value, String label) {
+    if (value == null || value.trim().isEmpty) return 'Please enter $label';
+    if (value.trim().length > 300) return '$label is too long (maximum 300 characters)';
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Add Your Recipe')),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(18),
+          children: [
+            const Text('Share your favourite dish!',
+              style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            const Text('Enter the recipe information below.',
+              style: TextStyle(color: Colors.black54)),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: nameController,
+              maxLength: 60,
+              decoration: const InputDecoration(labelText: 'Recipe name',
+                prefixIcon: Icon(Icons.restaurant_menu)),
+              validator: (v) => requiredText(v, 'a recipe name'),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: descriptionController,
+              maxLength: 200,
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: 'Description',
+                prefixIcon: Icon(Icons.description)),
+              validator: (v) => requiredText(v, 'a description'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: category,
+              decoration: const InputDecoration(labelText: 'Category',
+                prefixIcon: Icon(Icons.category)),
+              items: ['Breakfast', 'Lunch', 'Dinner', 'Snacks', 'Dessert']
+                .map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+              onChanged: (v) => setState(() => category = v ?? 'Breakfast'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              value: difficulty,
+              decoration: const InputDecoration(labelText: 'Difficulty',
+                prefixIcon: Icon(Icons.trending_up)),
+              items: ['Easy', 'Medium', 'Hard']
+                .map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+              onChanged: (v) => setState(() => difficulty = v ?? 'Easy'),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: durationController,
+              decoration: const InputDecoration(labelText: 'Cooking time (e.g. 20 min)',
+                prefixIcon: Icon(Icons.schedule)),
+              validator: (v) => requiredText(v, 'the cooking time'),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: servingsController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Number of servings',
+                prefixIcon: Icon(Icons.people)),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Please enter servings';
+                final n = int.tryParse(v.trim());
+                if (n == null || n < 1 || n > 50) return 'Enter a number from 1 to 50';
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: ingredientsController,
+              maxLines: 4,
+              maxLength: 1000,
+              decoration: const InputDecoration(
+                labelText: 'Ingredients (one per line)',
+                alignLabelWithHint: true,
+                prefixIcon: Icon(Icons.shopping_basket),
+              ),
+              validator: (v) => requiredText(v, 'at least one ingredient'),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: stepsController,
+              maxLines: 5,
+              maxLength: 1500,
+              decoration: const InputDecoration(
+                labelText: 'Preparation steps (one per line)',
+                alignLabelWithHint: true,
+                prefixIcon: Icon(Icons.format_list_numbered),
+              ),
+              validator: (v) => requiredText(v, 'the preparation steps'),
+            ),
+            const SizedBox(height: 22),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D5B),
+                padding: const EdgeInsets.symmetric(vertical: 15),
+              ),
+              icon: const Icon(Icons.save),
+              label: const Text('Save Recipe'),
+              onPressed: () {
+                if (!_formKey.currentState!.validate()) return;
+                final recipe = Recipe(
+                  id: DateTime.now().microsecondsSinceEpoch.toString(),
+                  name: nameController.text.trim(),
+                  category: category,
+                  description: descriptionController.text.trim(),
+                  imageUrl: '',
+                  duration: durationController.text.trim(),
+                  difficulty: difficulty,
+                  servings: int.parse(servingsController.text.trim()),
+                  ingredients: ingredientsController.text
+                    .split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+                  steps: stepsController.text
+                    .split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+                );
+                widget.store.addRecipe(recipe);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Recipe added successfully!')),
+                );
+                Navigator.pop(context);
+              },
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ------------------------------------------------------------
+// FAVOURITES SCREEN
+// ------------------------------------------------------------
+class FavoritesScreen extends StatelessWidget {
+  final RecipeStore store;
+  const FavoritesScreen({super.key, required this.store});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: store,
+      builder: (context, child) {
+        final favorites = store.favorites;
+        return Scaffold(
+          appBar: AppBar(title: const Text('My Favourites')),
+          body: favorites.isEmpty
+            ? const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(25),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.favorite_border, size: 65, color: Colors.grey),
+                      SizedBox(height: 12),
+                      Text('No favourite recipes yet.',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                      SizedBox(height: 5),
+                      Text('Tap the heart on a recipe to save it here.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                ),
+              )
+            : ListView(
+                padding: const EdgeInsets.all(16),
+                children: favorites.map((recipe) =>
+                  RecipeCard(recipe: recipe, store: store)).toList(),
+              ),
+        );
+      },
+    );
+  }
+}
